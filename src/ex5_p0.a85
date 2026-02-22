@@ -1,0 +1,352 @@
+$ALLPUBLIC
+; COURIER
+;--------------------------------------------------------------------
+;       TITLE   'LAB-RAB1. I8085 2006' =EX5_PO.A85
+; рейярш опнцпюлл, хг лс опхлепш опнцпюллхпнбюмхъ мю ло 8080, 8085
+;--------------------------------------------------------------------
+; опнцпюллш реярхпсчряъ б япеде лхйпнопнжеяянпю 8085, хлечыецн
+; йнмтхцспюжхч ROM=2KBYTE, RAM=256BYTE
+RAM     EQU     0800H   ; пюяонкнфемхе оюлърх рхою RAM
+ROM     EQU     0000H   ; пюяонкнфемхе оюлърх рхою ROM
+LEN_RAM EQU     0100H   ; пюглеп оюлърх рхою RAM
+
+        DEFSEG  CODE1,CLASS=CODE,START=ROM
+        SEG     CODE1
+        JMP     EXAMPL1 ; +0 бкнфеммше жхйкш
+        JMP     EXAMPL2 ; +3 жхйкю аег явервхйю
+        JMP     EXAMPL3 ; +6 жхйк аег хяонкэгнбюмхъ оо DEQH
+        JMP     EXAMPL4 ; +9 йнлахмхпнбюммше жхйкш - опнцпюллю дхяоервепю лнмхрнпю
+        JMP     EXAMPL5 ; +12 явер едхмхвмшу ахрнб б аюире бюпхюмр 1
+        JMP     EXAMPL6 ; +15 явер едхмхвмшу ахрнб б аюире бюпхюмр 2
+        JMP     EXAMPL7 ; +18 явер едхмхвмшу ахрнб б аюире бюпхюмр 3
+        JMP     EXAMPL8 ; явер едхмхвмшу ахрнб б аюире бюпхюмр 4
+        JMP     EXAMPL9 ; оо бшвхякемхъ йнмрпнкэмни ясллш
+        JMP     EXAMPL10; опнцпюллмюъ пеюкхгюжхъ рпхццепю
+
+
+; нопедекемхе яецлемрю дкъ дюммшу
+TEXTSIZE        EQU     20H
+        DEFSEG  DATA1,CLASS=DATA,START=RAM
+        SEG     DATA1
+BUF1
+ADR1    DS      TEXTSIZE-1
+ADR2    DS      1
+DIM     EQU     $ - ADR1
+
+; нопедекемхе яецлемрю дкъ ярейю
+STACKSIZE       EQU     32
+        DEFSEG  STACK,CLASS=DATA,START=RAM+LEN_RAM-STACKSIZE
+        SEG     STACK
+STACKR  DS      STACKSIZE
+STACK_0 EQU     $
+;--------------------------------------------------------------------
+;        DEFSEG  CODE,CLASS=CODE,START=ROM+40H - нопедекемхъ мнбнцн
+; яецлемрю DATA  ме рпеасеряъ р. й. щрн - ярюмдюпрмши яецлемр, нрйпшрши
+; он слнквюмхч.
+        SEG     CODE
+
+; бкнфеммше жхйкш
+EXAMPL1:
+        LXI     SP,STACK_0
+ ;бшгнб оо, пеюкхгсчыеи бпелеммсч гюдепфйс
+        MVI     C,10H
+        CALL    DELAY
+        HLT
+; рейяр оо
+DELAY:
+        PUSH    B
+DEL1:
+        MVI     B,0DH   ;дкъ нркюдйх хглемемн  --- 0D9H
+DEL2:
+        XTHL
+        XTHL
+        DCR     B
+        JNZ     DEL2
+        DCR     C
+        JNZ     DEL1
+        POP     B
+        RET
+
+; опхлеп жхйкю аег явервхйю
+EXAMPL2:
+        LXI     SP,STACK_0
+
+        LXI     H,ADR1          ;
+        LXI     D,ADR2
+        INX     D               ;
+        MVI     B,0
+LOOP2:
+        MOV     M,B
+        INX     H
+        INR     B               ;
+        CALL    DEQH
+        JNZ     LOOP2           ;
+        HLT
+
+DEQH:
+;оо япюбмемхъ дбсу 16-пюгпъдмшу вхяек
+        MOV     A,L
+        SUB     E
+        RNZ             ;
+        MOV     A,H
+        SBB     D
+        RET             ;
+        HLT
+
+;бюпхюмр жхйкю аег хяонкэгнбюмхъ оо DEQH
+EXAMPL3:
+        LXI     H,ADR1  ;
+        MVI     B,0     ;
+LOOP3:
+        MOV     M,B     ;
+        INX     H       ;
+        INR     B       ;
+        MOV     A,L
+        CPI     (ADR2+1) AND 0FFH
+        JNZ     LOOP3   ;
+        MOV     A,H
+        CPI     (ADR2+1) SHR 8
+        JNZ     LOOP3
+        HLT
+
+; йнлахмхпнбюммше жхйкш - опнцпюллю дхяоервепю лнмхрнпю
+; рюакхжш йнднб х дхпейрхб
+
+STAB:   DB      00H; MCMD
+        DB      05H; GCMD
+        DB      14H; DCMD
+        DB      15H; SCMD
+        DB      24H; ICMD
+        DB      25H; XCMD
+NUM_SMB EQU     $-STAB
+
+ADR_TAB:
+        DW      0000H
+        DW      XCMD
+        DW      ICMD
+        DW      SCMD
+        DW      DCMD
+        DW      GCMD
+        DW      MCMD
+
+
+GETCM:
+        LXI     H,STAB
+        LXI     B, NUM_SMB      ;
+LOOP4:   ;
+        CMP     M
+        JZ      YES     ;
+        INX     H       ;
+        DCR     C
+        JNZ     LOOP4    ;
+NUMBER:
+        HLT
+YES:
+        LXI     H,ADR_TAB
+        DAD     B
+        DAD     B
+        MOV     A,M     ;
+        INX     H       ;
+        MOV     H,M     ;
+        MOV     L,A     ;
+        PCHL            ;
+;
+EXAMPL4:
+        LXI     H,STACK_0
+        MVI     A,14H   ;жхтпю, ббедеммюъ я йкюбхюрспш
+        CALL    GETCM
+
+XCMD:
+        HLT
+SCMD:
+        HLT
+MCMD:
+        HLT
+ICMD:
+        HLT
+GCMD:
+        HLT
+DCMD:
+        HLT
+
+
+        SEG     DATA1
+TEST_BYTE       DS      1
+
+        SEG     CODE
+EXAMPL5:
+        LXI     SP,STACK_0
+; явер едхмхвмшу ахрнб б аюире бюпхюмр 1
+        LXI     H,TEST_BYTE       ;
+        MOV     A,M
+        CALL    COUNT_BITS_1      ;
+        HLT
+
+COUNT_BITS_1:
+        MVI   B,8   ;
+        MVI   C,0   ;
+LOOP5:
+        RLC         ;
+        JNC   NO_CY ;
+        INR   C     ;
+NO_CY:
+        DCR   B     ;
+        JNZ   LOOP5
+        RET
+
+TAB_MASK:
+        DB   01,  02,  04,  08
+        DB   10H, 20H, 40H, 80H
+EXAMPL6:
+        LXI     SP,STACK_0
+; явер едхмхвмшу ахрнб б аюире бюпхюмр 2
+        LDA     TEST_BYTE
+        CALL    COUNT_BITS_2
+        HLT
+
+COUNT_BITS_2:
+        LXI     H,TAB_MASK
+        MOV     B,A     ;
+        MVI     D,0     ;
+        MVI     C,8     ;
+LOOP6:
+        ANA     M       ;
+        JZ      $+4     ;
+        INR     D       ;
+        INX     H       ;
+        DCR     C       ;
+        MOV     A,B     ;
+        JNZ     LOOP6    ;
+        RET
+
+EXAMPL7:
+        LXI     SP,STACK_0
+; явер едхмхвмшу ахрнб б аюире бюпхюмр 3
+        LDA     TEST_BYTE
+        CALL    COUNT_BITS_3
+        HLT
+
+COUNT_BITS_3:
+        MOV     B,A     ;
+        MVI     A,0     ;
+        STC             ; (A)=0, CY=1
+        MVI     C,8     ;
+        MVI     D,0     ;
+LOOP7:
+        RAL             ;
+        MOV     E,A     ;
+        ANA     B       ;
+        JZ      $+4     ;
+        INR     D       ;
+        DCR     C       ;
+        MOV     A,E     ;
+        JNZ     LOOP7    ;
+        RET
+
+EXAMPL8:
+        LXI     SP,STACK_0
+; явер едхмхвмшу ахрнб б аюире бюпхюмр 4
+        LDA     TEST_BYTE
+        CALL    COUNT_BITS_4
+        HLT
+
+COUNT_BITS_4:
+        STC
+        CMC
+        MVI     B,0
+LOOP8:
+        RAL
+        JNC     NO
+        INR     B
+NO:     STC
+        CMC
+        CPI     0
+        JNZ     LOOP8
+        RET
+
+EXAMPL9:
+        LXI     SP,STACK_0
+;оо бшвхякемхъ йнмрпнкэмни ясллш
+        LXI     D,ADR1  ;
+        LXI     H,DIM   ;
+        CALL    CHE_SUM
+        HLT
+
+CHE_SUM:
+        PUSH    H       ;
+        MVI     B,0     ;
+        LXI     H,0     ;
+CHE1:   LDAX    D       ;
+        CALL    LOW_HEX ;
+        LDAX    D       ;
+        CALL    HIGH_HEX
+        INX     D       ;
+        XTHL            ;
+        DCX     H       ;
+        MOV     A,L     ;
+        ORA     H       ;
+        XTHL            ;
+        JNZ     CHE1
+        POP     B
+        RET             ;
+
+LOW_HEX:        ;
+; оо бшдекемхъ лкюдьеи HEX-жхтпш
+        ANI     0FH     ;
+        MOV     C,A
+        DAD     B       ;
+        RET
+
+HIGH_HEX:
+; оо бшдекемхъ ярюпьеи HEX-жхтпш
+        RRC             ;
+        RRC             ;
+        RRC             ;
+        RRC             ;
+        ANI     0FH     ;
+        MOV     C,A
+        DAD     B       ;
+        RET
+
+; опнцпюллмюъ пеюкхгюжхъ рпхццепю
+; нопедекемхе онпрю ббндю/бшбндю
+        DEFSEG  PA8355SEG,START=8,CLASS=IOSPACE
+        SEG     PA8355SEG
+PA8355  DS      1       ; онпр A дкъ ббндю дюммшу
+PB8355  DS      1       ; онпр B дкъ бшбндю дюммшу
+                        ; он RESET сярюмюбкхбюеряъ мю ббнд
+DA8355  DS      1       ; DDR A
+DB8355  DS      1       ; DDR B
+
+BITX    EQU     00000001B       ; хяонкэгсеряъ 0-BIT
+
+        SEG     CODE
+EXAMPL10:
+        MVI     A,01H
+        OUT     DB8355  ; мюярпнийю 0-BIT онпрю B мю бшбнд
+
+        IN      PA8355
+        ANI     BITX
+        MOV     B,A  ; X-
+WAIT:
+        IN      PA8355
+        ANI     BITX ; X+
+        CMP     B
+        JZ      CHANGE
+        JC      CHANGE
+        MOV     D,A  ;
+        MOV     A,C  ;
+        CMA       ;
+        MOV     C,A  ;
+        OUT     PB8355
+        MOV     A,D
+CHANGE:
+        MOV     B,A  ;
+        JMP     WAIT
+; йнмеж 1 вюярх
+         END EXAMPL1
+
+
+
+
+
