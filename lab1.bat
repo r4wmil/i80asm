@@ -1,2 +1,2 @@
-cd	c:\i80asm\DosBox\
-DOSBox.exe -c "mount c: c:\i80asm" -c "c:" -c "cd c:\lab" -c "build.bat ex5_p0"
+cd %~dp0\DosBox
+DOSBox.exe -c "mount c: %~dp0 " -c "c:" -c "cd c:\lab" -c "build.bat ex5_p0"
