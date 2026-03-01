@@ -1,8 +1,7 @@
-PATH=%PATH%;c:\avkit
-PATH=%PATH%;c:\tools
+call setpath
 cd c:\lab
 call asm %1
-call link %1
+call %2 %1
 call sim %1
 :: pause
 :: exit
