@@ -1,0 +1,127 @@
+$ALLPUBLIC
+$TITLE(TITLE   'LAB-RAB5. I8085 2009 =L_01.A85')
+; COURIER
+;-------------------------------------------------
+;       L_01.A85
+; бюпхюмр опнцпюллш хг меяйнкэйху хяундмшу тюикнб
+;   пюгдек 7 кюанпюрнпмнцн опюйрхйслю
+;-------------------------------------------------
+;       MAIN PROGRAM
+
+        %INCLUDE "OPIS.INC"	; ондйкчвемхе 
+        %INCLUDE "LAB_IO.INC"	;	днонкмхрекэмшу 
+	%INCLUDE "INIT_BU.MAC"	;		рейярнбшу тюикнб
+
+RAM     EQU     0800H
+ROM     EQU     0000H
+LEN_RAM EQU     0800H
+
+;	BUFFERS
+TEXTSIZE        EQU     20H
+
+        DEFSEG  DATA1,CLASS=DATA,START=RAM
+        SEG     DATA1
+BUF1:   DS      TEXTSIZE
+BUF2:   DS      TEXTSIZE
+BUF3:   DS      TEXTSIZE
+
+;       STACK
+STACKSIZE	EQU	32
+        DEFSEG  STACK,CLASS=DATA,START=RAM+LEN_RAM-STACKSIZE
+        SEG     STACK
+STACKR: DS      STACKSIZE
+STPOINT EQU     $               ;
+
+;       FLAGS
+        SEG     DATA1
+PASS1	DS	1
+;       MASKS FOR EXAMPLES
+MASK11  EQU     00000011B       ;
+MASK12	EQU	01010000B	;
+
+;
+;       PROGRAMM
+;
+        EXTERN  DEQH	; назъбкемхе бмеьмецн хлемх, 
+        ; ондйкчвюелнцн мю ярюдхх йнлонмнбйх
+
+        SEG     CODE
+
+PROG:   LXI     SP,STPOINT
+        MVI     A,0     ;ALL INPUT
+        OUT     DB8355
+        DCR     A
+        OUT     DA8355  ;ALL OUTPUT
+
+	INIT1	STACKR,'.',STACKSIZE
+        INIT1   BUF1,'1',TEXTSIZE
+        INIT1   BUF2,'2',TEXTSIZE
+        INIT1   BUF3,'3',TEXTSIZE
+;
+;       MAIN
+;
+;       INPUT TO PORT A 8355
+        LXI     H,BUF1+TEXTSIZE-1
+	MVI	M,0	;END OF BUFFER
+	XCHG
+        LXI     H,BUF1
+LOOPIN:
+        IN      PB8355
+        MOV     M,A
+        INX     H
+        CALL    DEQH
+        JNZ     LOOPIN
+;       DECODING
+        LXI     H,BUF1
+	CALL	KONSUM
+
+	LXI	D,BUF2
+	MVI	A,1
+	STA	PASS1
+LOOP1:
+        MOV     A,M
+	ORA	A
+	JZ	ENDTEXT
+	CALL	CODING
+	STAX	D
+	INX	H
+	INX	D
+	JMP	LOOP1
+ENDTEXT:
+        STAX    D
+	LDA	PASS1
+	ORA	A
+	MVI	A,0
+	STA	PASS1
+	JZ	HALT
+PRODOLJ:
+;       ONCE MORE
+	LXI	H,BUF2
+	LXI	D,BUF3
+	JMP	LOOP1
+;
+HALT:
+        LXI     H,BUF3
+        CALL    KONSUM
+;       OUTPUT FROM THE PORT B
+        LXI     H,BUF2
+        MVI     B,TEXTSIZE-1
+LOOPOUT:
+        MOV     A,M
+        OUT     PA8355
+        INX     H
+        DCR     B
+        JNZ     LOOPOUT
+
+	HLT
+
+;======	SUBROUTINES ============
+CODING:
+        CMA
+	RET
+
+KONSUM:
+	;
+	RET
+
+	END

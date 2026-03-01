@@ -1,0 +1,15 @@
+;рейярнбши тюик, ондйкчвюелши мю ярюдхх рпюмякъжхх
+; нохяюмхе люйпнйнлюмдш
+;       MACRO
+;--------------------------------------------------
+INIT1	%MACRO	BU,SIM,SZ
+        %LOCAL LOOP_INIT
+        LXI	H,BU
+	MVI	B,SZ
+LOOP_INIT:
+	MVI	M,SIM
+	INX	H
+	DCR	B
+	JNZ	LOOP_INIT
+        %ENDM
+

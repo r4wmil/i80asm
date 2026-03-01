@@ -1,4 +1,5 @@
 **/*.OBJ
+!SUBR_01.OBJ
 **/*.HEX
 **/*.XRF
 **/*.PRN
